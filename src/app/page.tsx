@@ -1,6 +1,6 @@
 'use client'
 
-import { createAccount, login } from "@/utils/DataServices";
+import { createAccount, getLoggedInUserData, login } from "@/utils/DataServices";
 import { IToken } from "@/utils/Interfaces";
 import { Button, Checkbox, Label, TextInput } from "flowbite-react";
 import { useRouter } from "next/navigation";
@@ -40,6 +40,9 @@ export default function Home() {
         if(typeof window != null){
           localStorage.setItem('token', token.token);
           console.log(token.token);
+          await getLoggedInUserData(username);
+
+
 
           router.push('/Dashboard');
         }
