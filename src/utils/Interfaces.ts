@@ -1,14 +1,14 @@
 export interface IBlogItems {
     id: number;
-    UserId: number;
-    PublisherName: string;
-    Date: number;
-    Title: string;
-    Image: string;
-    Description: string;
-    Category: string;
-    IsPublished: boolean;
-    IsDeleted: boolean;
+    userId: number;
+    publisherName: string;
+    date: string;
+    title: string;
+    image: string;
+    description: string;
+    category: string;
+    isPublished: boolean;
+    isDeleted: boolean;
 }
 
 //This will be used for our login and create acc fetch
