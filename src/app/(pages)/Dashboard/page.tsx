@@ -1,10 +1,11 @@
 'use client'
-import { checkToken, loggedInData } from '@/utils/DataServices';
+import { checkToken, getBlogItemsByUserId, getToken, loggedInData } from '@/utils/DataServices';
 import React, { useEffect, useState } from 'react'
 import { Button, Dropdown, DropdownItem, FileInput, Label, Modal, ModalBody, ModalFooter, ModalHeader, TextInput, Accordion, AccordionContent, AccordionPanel, AccordionTitle, ListGroup } from 'flowbite-react'
 import { IBlogItems } from '@/utils/Interfaces';
 import BlogEntries from "@/utils/BlogEntries.json"
 import { disconnect } from 'process';
+import { useRouter } from 'next/navigation';
 
 
 const page = () => {
@@ -23,12 +24,33 @@ const page = () => {
 
   const [blogItems, setBlogItems] = useState<IBlogItems[]>(BlogEntries);
 
+  const router = useRouter();
+
   useEffect(() => {
+
+    const getLoggedInData = async () => {
+      //Get the user's info
+      const loggedIn = loggedInData();
+      console.log(loggedIn);
+      setBlogUserId(loggedIn.id);
+      setBlogPublisherName(loggedIn.username);
+
+      //Get the user's Blog Items
+      const userBlogItems = await getBlogItemsByUserId(loggedIn.id, getToken());
+      console.log(userBlogItems);
+      
+      //Set user's blog items inside of our useState
+      setBlogItems(userBlogItems);
+    }
+
+
     if (!checkToken()) {
       //Push to Login Page
+      router.push('/');
 
     } else {
       //Get User Data / Login Logic function
+      getLoggedInData();
     }
   }, [])
 

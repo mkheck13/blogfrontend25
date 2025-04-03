@@ -38,7 +38,7 @@ export default function Home() {
       let token: IToken = await login(userData);
       if(token != null){
         if(typeof window != null){
-          localStorage.setItem('token', token.token);
+          localStorage.setItem('Token', token.token);
           console.log(token.token);
           await getLoggedInUserData(username);
 
@@ -49,9 +49,6 @@ export default function Home() {
       }else{
         alert('Login was No Good, Wrong Password or something');
       }
-
-      
-
 
     }
 

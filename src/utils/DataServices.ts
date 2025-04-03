@@ -189,6 +189,6 @@ export const deleteBlogItem = async (blog:IBlogItems, token:string) =>{
     return data.success;
 }
 
-const getToken = ()=> {
+export const getToken = ()=> {
     return localStorage.getItem("Token") ?? "";
 }
