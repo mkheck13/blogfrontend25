@@ -1,11 +1,12 @@
 'use client'
-import { checkToken, getBlogItemsByUserId, getToken, loggedInData } from '@/utils/DataServices';
+import { addBlogItem, checkToken, deleteBlogItem, getBlogItemsByUserId, getToken, loggedInData, upDateBlogItem } from '@/utils/DataServices';
 import React, { useEffect, useState } from 'react'
 import { Button, Dropdown, DropdownItem, FileInput, Label, Modal, ModalBody, ModalFooter, ModalHeader, TextInput, Accordion, AccordionContent, AccordionPanel, AccordionTitle, ListGroup } from 'flowbite-react'
 import { IBlogItems } from '@/utils/Interfaces';
 import BlogEntries from "@/utils/BlogEntries.json"
 import { disconnect } from 'process';
 import { useRouter } from 'next/navigation';
+import { format } from 'date-fns';
 
 
 const page = () => {
@@ -63,6 +64,20 @@ const page = () => {
   const handleCategory = (categories: string) => setBlogCategory(categories);
 
   const handleImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    //We are creating a new file reader object
+    let reader = new FileReader();
+
+    //Then we are going to get the first file to select
+    let file = e.target.files?.[0]
+
+    //ANd if there a file to select
+    if (file){
+      //When this file is turned into a string this onload funciton will run
+      reader.onload = () => {
+        setBlogImage(reader.result); //Once the file is read we will store the reuslt into our setter
+      }
+      reader.readAsDataURL(file); //This converts our file to a base64-encoded string
+    }
 
   };
 
@@ -71,32 +86,90 @@ const page = () => {
   const handleShow = () => {
     setOpenModal(true);
     setEdit(false);
+    setBlogId(0);
+    setBlogUserId(blogUserId);
+    setBlogPublisherName(blogPublisherName);
+    setBlogTitle("");
+    setBlogDescription("");
+    setBlogImage("");
+    setBlogCategory("");
   }
 
   const handleEdit = (items: IBlogItems) => {
     setOpenModal(true);
     setEdit(true);
+    setBlogId(items.id);
+    setBlogUserId(items.userId);
+    setBlogPublisherName(items.publisherName);
+    setBlogTitle(items.title);
+    setBlogDescription(items.description);
+    setBlogImage(items.image);
+    setBlogCategory(items.category);
   };
 
   const handlePublish = async (items: IBlogItems) => {
     items.isPublished = !items.isPublished;
+
+    let result = await upDateBlogItem(items, getToken());
+    
+    if(result){
+      let userBlogItems = await getBlogItemsByUserId(blogUserId, getToken());
+      setBlogItems(userBlogItems);
+    }else{
+      alert("Blog was not published");
+    }
   };
 
   const handleDelete = async (items: IBlogItems) => {
     items.isDeleted = true;
+
+    let result = await deleteBlogItem(items, getToken());
+
+    if(result){
+      let userBlogItems = await getBlogItemsByUserId(blogUserId, getToken());
+      setBlogItems(userBlogItems);
+    }else{
+      alert("Blog item(s) was not deleted");
+    }
   };
 
   //--------Save Function---------
 
-  const handleSave = (e: React.MouseEvent<HTMLButtonElement>) => {
-    const item = {}
+  const handleSave = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    const item: IBlogItems = {
+      id: blogId,
+      userId: blogUserId,
+      publisherName: blogPublisherName,
+      title: blogTitle,
+      description: blogDescription,
+      image: blogImage,
+      category: blogCategory,
+      date: format(new Date(), 'MM/dd/yyyy'),
+      isPublished: e.currentTarget.textContent === 'Save' ? false : true,
+      isDeleted: false
+    }
     setOpenModal(false);
+
+    let result = false;
+
+
 
     if (edit) {
       //Our edit logic will go here
+      result = await upDateBlogItem(item, getToken());
 
     } else {
       //Our Add Logic will go here
+      result = await addBlogItem(item, getToken());
+
+    }
+
+    if(result){
+      let userBlogItems = await getBlogItemsByUserId(blogUserId, getToken());
+      setBlogItems(userBlogItems);
+
+    }else{
+      alert(`Blog items wer not ${edit ? 'Updated' : 'Added'}`);
 
     }
   };
@@ -107,7 +180,7 @@ const page = () => {
       <div className='flex flex-col items-center mb-10'>
         <h1 className='text-center text-3xl'>Dashboard Page</h1>
 
-        <Button onClick={() => setOpenModal(true)}>Add Blog</Button>
+        <Button onClick={handleShow}>Add Blog</Button>
         <Modal show={openModal} onClose={() => setOpenModal(false)}>
           <ModalHeader>{edit ? 'Edit Blog Post' : 'Add Blog Post'}</ModalHeader>
           <ModalBody>
